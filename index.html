@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FactoryOS Nexus — Sistema Nervoso Central</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+    <style>
+        :root {
+            --nexus-blue: #00d4ff;
+            --nexus-cyan: #00ffcc;
+            --nexus-purple: #a855f7;
+            --nexus-pink: #ec4899;
+            --bg-deep: #0a0a0f;
+            --bg-card: rgba(15, 15, 25, 0.9);
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-deep);
+            color: white;
+            overflow: hidden;
+        }
+        
+        #nexus-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .ui-layer > * {
+            pointer-events: auto;
+        }
+        
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(10,10,15,0.95) 0%, transparent 100%);
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--nexus-blue), var(--nexus-cyan));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+            animation: pulse-glow 3s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 30px rgba(0, 212, 255, 0.5); }
+            50% { box-shadow: 0 0 50px rgba(0, 212, 255, 0.8); }
+        }
+        
+        .logo-text {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .logo-text span {
+            background: linear-gradient(135deg, var(--nexus-blue), var(--nexus-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: #10b981;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Command Center */
+        .command-center {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+        
+        .command-input {
+            width: 600px;
+            max-width: 90vw;
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        .command-input:focus-within {
+            border-color: var(--nexus-blue);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+        }
+        
+        .command-input input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .command-input input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .command-send {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--nexus-blue), var(--nexus-cyan));
+            border: none;
+            border-radius: 10px;
+            color: var(--bg-deep);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        
+        .command-send:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Agent Cards Panel */
+        .agents-panel {
+            position: fixed;
+            top: 100px;
+            right: 2rem;
+            width: 320px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            z-index: 50;
+        }
+        
+        .agent-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+        
+        .agent-card:hover {
+            border-color: var(--nexus-blue);
+            transform: translateX(-5px);
+        }
+        
+        .agent-card.active {
+            border-color: rgba(16, 185, 129, 0.5);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .agent-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .agent-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .agent-status.active { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        .agent-status.busy { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+        .agent-status.inactive { background: #6b7280; }
+        
+        .agent-activity {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* Metrics Panel */
+        .metrics-panel {
+            position: fixed;
+            top: 100px;
+            left: 2rem;
+            z-index: 50;
+        }
+        
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            backdrop-filter: blur(10px);
+            min-width: 180px;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--nexus-blue), var(--nexus-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .metric-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 0.25rem;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 50;
+        }
+        
+        .quick-btn {
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .quick-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: var(--nexus-blue);
+        }
+        
+        /* Notifications */
+        .notifications {
+            position: fixed;
+            bottom: 120px;
+            right: 2rem;
+            width: 300px;
+            z-index: 100;
+        }
+        
+        .notification {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Nexus 3D Canvas -->
+    <canvas id="nexus-canvas"></canvas>
+    
+    <!-- UI Layer -->
+    <div class="ui-layer">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                <div class="logo-text">FactoryOS <span>Nexus</span></div>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>Sistema Online</span>
+            </div>
+        </header>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="showSection('projects')">📊 Projetos</button>
+            <button class="quick-btn" onclick="showSection('trading')">💰 Trading</button>
+            <button class="quick-btn" onclick="showSection('finance')">📈 Finanças</button>
+            <button class="quick-btn" onclick="showSection('agents')">🤖 Agentes</button>
+        </div>
+        
+        <!-- Metrics Panel -->
+        <div class="metrics-panel">
+            <div class="metric-card">
+                <div class="metric-value" id="metric-projects">4</div>
+                <div class="metric-label">Projetos Ativos</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="metric-agents">26</div>
+                <div class="metric-label">Agentes Online</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="metric-pnl">+12.5%</div>
+                <div class="metric-label">PnL Mensal</div>
+            </div>
+        </div>
+        
+        <!-- Agents Panel -->
+        <div class="agents-panel">
+            <div class="agent-card active" onclick="selectAgent('brain')">
+                <div class="agent-header">
+                    <span class="agent-name">🧠 brain</span>
+                    <div class="agent-status active"></div>
+                </div>
+                <div class="agent-activity">Estratégia OKR em andamento</div>
+            </div>
+            <div class="agent-card" onclick="selectAgent('scheduler')">
+                <div class="agent-header">
+                    <span class="agent-name">📋 scheduler</span>
+                    <div class="agent-status active"></div>
+                </div>
+                <div class="agent-activity">Atualizando cronogramas</div>
+            </div>
+            <div class="agent-card" onclick="selectAgent('trader')">
+                <div class="agent-header">
+                    <span class="agent-name">📈 trader</span>
+                    <div class="agent-status busy"></div>
+                </div>
+                <div class="agent-activity">Analisando BTC/USDT</div>
+            </div>
+            <div class="agent-card" onclick="selectAgent('trend_analyst')">
+                <div class="agent-header">
+                    <span class="agent-name">📊 trend_analyst</span>
+                    <div class="agent-status active"></div>
+                </div>
+                <div class="agent-activity">Gerando relatório diário</div>
+            </div>
+            <div class="agent-card" onclick="selectAgent('quality_auditor')">
+                <div class="agent-header">
+                    <span class="agent-name">✅ quality_auditor</span>
+                    <div class="agent-status inactive"></div>
+                </div>
+                <div class="agent-activity">Aguardando tarefas</div>
+            </div>
+        </div>
+        
+        <!-- Command Center -->
+        <div class="command-center">
+            <div class="command-input">
+                <i class="ri-command-line" style="color: rgba(255,255,255,0.4); font-size: 1.2rem;"></i>
+                <input type="text" id="command-input" placeholder="Digite um comando ou pergunta..." onkeypress="handleCommand(event)">
+                <button class="command-send" onclick="executeCommand()">
+                    <i class="ri-send-plane-fill"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Notifications -->
+        <div class="notifications" id="notifications"></div>
+    </div>
+
+    <script>
+        // ========================================
+        // FACTORYOS NEXUS — CORE ENGINE
+        // ========================================
+        
+        // Scene Setup
+        const canvas = document.getElementById('nexus-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        
+        camera.position.z = 50;
+        
+        // Orbit Controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+        
+        // Nexus Core Globe
+        const coreGeometry = new THREE.IcosahedronGeometry(10, 4);
+        const coreMaterial = new THREE.MeshPhongMaterial({
+            color: 0x00d4ff,
+            emissive: 0x00d4ff,
+            emissiveIntensity: 0.2,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.6
+        });
+        const core = new THREE.Mesh(coreGeometry, coreMaterial);
+        scene.add(core);
+        
+        // Inner Core Glow
+        const innerGlow = new THREE.Mesh(
+            new THREE.IcosahedronGeometry(8, 2),
+            new THREE.MeshBasicMaterial({
+                color: 0x00ffcc,
+                transparent: true,
+                opacity: 0.3
+            })
+        );
+        scene.add(innerGlow);
+        
+        // Agent Nodes
+        const agents = [
+            { name: 'brain', color: 0xa855f7, position: [15, 8, 0] },
+            { name: 'scheduler', color: 0x3b82f6, position: [-15, 8, 0] },
+            { name: 'trader', color: 0x10b981, position: [0, 15, 10] },
+            { name: 'trend_analyst', color: 0xf59e0b, position: [0, -10, 12] },
+            { name: 'quality_auditor', color: 0xef4444, position: [12, -8, -8] },
+            { name: 'crypto_analyst', color: 0x00d4ff, position: [-12, -5, -10] }
+        ];
+        
+        const agentNodes = [];
+        
+        agents.forEach((agent, index) => {
+            // Node sphere
+            const node = new THREE.Mesh(
+                new THREE.SphereGeometry(1.5, 32, 32),
+                new THREE.MeshPhongMaterial({
+                    color: agent.color,
+                    emissive: agent.color,
+                    emissiveIntensity: 0.5
+                })
+            );
+            node.position.set(...agent.position);
+            scene.add(node);
+            agentNodes.push({ mesh: node, ...agent, angle: (index / agents.length) * Math.PI * 2 });
+            
+            // Orbit ring
+            const ringGeometry = new THREE.TorusGeometry(Math.sqrt(agent.position[0]**2 + agent.position[1]**2 + agent.position[2]**2), 0.05, 16, 100);
+            const ringMaterial = new THREE.MeshBasicMaterial({
+                color: agent.color,
+                transparent: true,
+                opacity: 0.2
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            scene.add(ring);
+        });
+        
+        // Particles Background
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particleCount = 1000;
+        const posArray = new Float32Array(particleCount * 3);
+        
+        for (let i = 0; i < particleCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 200;
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.1,
+            color: 0x00d4ff,
+            transparent: true,
+            opacity: 0.6
+        });
+        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particles);
+        
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 1);
+        scene.add(ambientLight);
+        
+        const pointLight = new THREE.PointLight(0x00d4ff, 2, 100);
+        pointLight.position.set(20, 20, 20);
+        scene.add(pointLight);
+        
+        // Animation Loop
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+            
+            // Rotate core
+            core.rotation.x += 0.002;
+            core.rotation.y += 0.003;
+            innerGlow.rotation.x -= 0.001;
+            innerGlow.rotation.y -= 0.002;
+            
+            // Animate agent nodes
+            agentNodes.forEach((agent, index) => {
+                const angle = agent.angle + time * 0.5;
+                const radius = 20;
+                agent.mesh.position.x = Math.cos(angle) * radius;
+                agent.mesh.position.y = Math.sin(angle * 0.5) * 10;
+                agent.mesh.position.z = Math.sin(angle) * radius;
+            });
+            
+            // Rotate particles
+            particles.rotation.y += 0.0002;
+            particles.rotation.x += 0.0001;
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // ========================================
+        // COMMAND SYSTEM
+        // ========================================
+        
+        function handleCommand(event) {
+            if (event.key === 'Enter') {
+                executeCommand();
+            }
+        }
+        
+        function executeCommand() {
+            const input = document.getElementById('command-input');
+            const command = input.value.trim();
+            
+            if (!command) return;
+            
+            // Process command
+            const responses = {
+                'projetos': '📊 Projetos ativos: PROJ-004 (QA), PROJ-003 (Concluído), PROJ-002 (Concluído), PROJ-001 (Concluído)',
+                'status': '✅ Sistema operacional: 26/26 agentes online. Uptime: 99.9%',
+                'trading': '💰 BTC: $104,230 | Positions: 3 | PnL: +12.5%',
+                'ajuda': 'Comandos disponíveis: projetos, status, trading, finanças, agentes, criar projeto',
+                'agentes': '🤖 26 agentes ativos. brain (estratégia), scheduler (planejamento), trader (execução), quality_auditor (QA)'
+            };
+            
+            const response = responses[command.toLowerCase()] || `🔄 Processando: "${command}"...`;
+            addNotification(response);
+            
+            // Visual feedback
+            input.value = '';
+        }
+        
+        function addNotification(message) {
+            const container = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `<p style="font-size: 0.9rem;">${message}</p>`;
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+        
+        function selectAgent(agent) {
+            document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('active'));
+            event.target.closest('.agent-card').classList.add('active');
+            addNotification(`🤖 ${agent.toUpperCase()} selecionado.`);
+        }
+        
+        function showSection(section) {
+            const commands = {
+                'projects': 'Mostrando projetos...',
+                'trading': 'Abrindo painel de trading...',
+                'finance': 'Exibindo finanças...',
+                'agents': 'Lista de agentes carregada.'
+            };
+            addNotification(commands[section]);
+        }
+        
+        // Initialize
+        addNotification('🎉 FactoryOS Nexus iniciado com sucesso!');
+        addNotification('💡 Dica: Digite "ajuda" para ver comandos disponíveis.');
+    </script>
+</body>
+</html>
