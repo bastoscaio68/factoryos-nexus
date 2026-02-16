@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FactoryOS Omega — O Futuro Chegou</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+        :root {
+            --neon-blue: #00d4ff;
+            --neon-cyan: #00ffcc;
+            --neon-purple: #a855f7;
+            --neon-pink: #ec4899;
+            --neon-gold: #fbbf24;
+            --bg-dark: #030308;
+            --bg-card: rgba(15, 15, 25, 0.95);
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: white;
+            overflow: hidden;
+            cursor: none;
+        }
+        #omega-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .ui-layer { position: relative; z-index: 100; pointer-events: none; }
+        .ui-layer > * { pointer-events: auto; }
+        .cursor { width: 20px; height: 20px; border: 2px solid var(--neon-blue); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transition: transform 0.1s; mix-blend-mode: difference; }
+        .cursor-dot { width: 4px; height: 4px; background: white; border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; }
+        .header {
+            position: fixed; top: 0; left: 0; right: 0; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(180deg, rgba(3,3,8,0.95) 0%, transparent 100%); z-index: 100;
+        }
+        .logo { display: flex; align-items: center; gap: 1rem; }
+        .logo-icon {
+            width: 56px; height: 56px; background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan), var(--neon-purple));
+            border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.4);
+            animation: logo-glow 3s ease-in-out infinite;
+        }
+        @keyframes logo-glow { 0%, 100% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.4); } 50% { box-shadow: 0 0 80px rgba(0, 255, 204, 0.6); } }
+        .logo-text { font-size: 2rem; font-weight: 800; letter-spacing: -1px; }
+        .logo-text span { background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo-subtitle { font-size: 0.75rem; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; }
+        .status-bar { display: flex; gap: 2rem; align-items: center; }
+        .status-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border-radius: 50px; backdrop-filter: blur(10px); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
+        .status-dot.online { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        .status-dot.busy { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+        .panel {
+            position: fixed; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+            backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.5); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .panel:hover { border-color: rgba(0, 212, 255, 0.3); box-shadow: 0 25px 80px rgba(0, 212, 255, 0.15); }
+        .left-panel { top: 120px; left: 2rem; width: 280px; padding: 1.5rem; }
+        .right-panel { top: 120px; right: 2rem; width: 320px; max-height: calc(100vh - 200px); overflow-y: auto; padding: 1.5rem; }
+        .bottom-panel { bottom: 2rem; left: 50%; transform: translateX(-50%); width: 800px; max-width: calc(100vw - 4rem); padding: 1.5rem; }
+        .stat-card { background: var(--glass); border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; }
+        .stat-card:hover { background: rgba(0, 212, 255, 0.05); border-color: rgba(0, 212, 255, 0.2); transform: translateX(5px); }
+        .stat-value { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
+        .stat-change { font-size: 0.85rem; margin-top: 0.5rem; }
+        .stat-change.positive { color: #10b981; }
+        .agent-card { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--glass); border-radius: 12px; margin-bottom: 0.75rem; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s; }
+        .agent-card:hover { background: rgba(0, 212, 255, 0.08); border-color: rgba(0, 212, 255, 0.2); transform: scale(1.02); }
+        .agent-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .agent-name { font-weight: 600; font-size: 0.95rem; }
+        .agent-status { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+        .agent-indicator { width: 10px; height: 10px; border-radius: 50%; }
+        .command-wrapper { position: relative; }
+        .command-input {
+            width: 100%; padding: 1.25rem 1.5rem; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 16px; color: white; font-size: 1rem; font-family: 'JetBrains Mono', monospace; outline: none; transition: all 0.3s;
+        }
+        .command-input:focus { border-color: var(--neon-blue); box-shadow: 0 0 30px rgba(0, 212, 255, 0.2), inset 0 0 30px rgba(0, 212, 255, 0.05); }
+        .command-input::placeholder { color: rgba(255,255,255,0.3); }
+        .command-send {
+            position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan)); border: none; border-radius: 12px;
+            color: var(--bg-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: all 0.3s;
+        }
+        .command-send:hover { transform: translateY(-50%) scale(1.1); box-shadow: 0 0 30px rgba(0, 212, 255, 0.5); }
+        .quick-actions { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .quick-btn { padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: rgba(255,255,255,0.7); font-size: 0.8rem; cursor: pointer; transition: all 0.3s; }
+        .quick-btn:hover { background: rgba(0, 212, 255, 0.15); border-color: var(--neon-blue); color: white; }
+        .chat-container { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%); width: 600px; max-width: calc(100vw - 4rem); z-index: 100; pointer-events: none; }
+        .chat-message {
+            background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; backdrop-filter: blur(20px); animation: messageSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: auto;
+        }
+        @keyframes messageSlide { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .chat-avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; margin-right: 0.75rem; }
+        .chat-name { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.25rem; }
+        .chat-text { font-size: 0.95rem; color: rgba(255,255,255,0.8); line-height: 1.5; }
+        .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.4); margin-bottom: 1rem; font-weight: 600; }
+        .progress-ring { width: 120px; height: 120px; position: relative; margin: 1rem auto; }
+        .progress-ring svg { transform: rotate(-90deg); }
+        .progress-ring circle { fill: none; stroke-width: 8; }
+        .progress-ring .bg { stroke: rgba(255,255,255,0.1); }
+        .progress-ring .progress { stroke: url(#gradient); stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 283; transition: stroke-dashoffset 1s ease; }
+        .progress-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; font-weight: 700; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        @media (max-width: 1200px) { .left-panel, .right-panel { display: none; } }
+        @media (max-width: 768px) { .header { padding: 1rem; } .logo-text { font-size: 1.5rem; } .bottom-panel { width: calc(100vw - 2rem); } }
+    </style>
+</head>
+<body>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+    <canvas id="omega-canvas"></canvas>
+    <svg style="position: absolute; width: 0; height: 0;"><defs><linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#00d4ff"/><stop offset="50%" style="stop-color:#00ffcc"/><stop offset="100%" style="stop-color:#a855f7"/></linearGradient></defs></svg>
+    <div class="ui-layer">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                <div><div class="logo-text">FactoryOS <span>Omega</span></div><div class="logo-subtitle">Neural Processing Unit</div></div>
+            </div>
+            <div class="status-bar">
+                <div class="status-item"><div class="status-dot online"></div><span style="font-size: 0.85rem;">26 Agentes Online</span></div>
+                <div class="status-item"><div class="status-dot busy"></div><span style="font-size: 0.85rem;">4 Processando</span></div>
+                <div class="status-item"><i class="ri-time-line" style="color: rgba(255,255,255,0.5);"></i><span style="font-size: 0.85rem;" id="uptime">Uptime: 99.9%</span></div>
+            </div>
+        </header>
+        <div class="panel left-panel">
+            <div class="section-title">System Metrics</div>
+            <div class="stat-card"><div class="stat-value" id="projects-count">4</div><div class="stat-label">Projetos Ativos</div><div class="stat-change positive">↑ 2 esta semana</div></div>
+            <div class="stat-card"><div class="stat-value" id="agents-active">26</div><div class="stat-label">Agentes Online</div><div class="stat-change positive">Todos operacionais</div></div>
+            <div class="stat-card"><div class="stat-value" id="pnl-value">+12.5%</div><div class="stat-label">PnL Mensal</div><div class="stat-change positive">↑ BTC liderando</div></div>
+            <div class="stat-card"><div class="progress-ring"><svg width="120" height="120"><circle class="bg" cx="60" cy="60" r="45"/><circle class="progress" id="progress-ring" cx="60" cy="60" r="45"/></svg><div class="progress-value" id="progress-text">87%</div></div><div class="stat-label" style="text-align: center;">Eficiência</div></div>
+        </div>
+        <div class="panel right-panel"><div class="section-title">Agent Network</div><div id="agents-list"></div></div>
+        <div class="panel bottom-panel">
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="sendCommand('projetos')">📊 Projetos</button>
+                <button class="quick-btn" onclick="sendCommand('trading')">💰 Trading</button>
+                <button class="quick-btn" onclick="sendCommand('finanças')">📈 Finanças</button>
+                <button class="quick-btn" onclick="sendCommand('agentes')">🤖 Agentes</button>
+                <button class="quick-btn" onclick="sendCommand('criar projeto')">➕ Novo Projeto</button>
+                <button class="quick-btn" onclick="sendCommand('status')">✅ Status</button>
+                <button class="quick-btn" onclick="sendCommand('ajuda')">❓ Ajuda</button>
+            </div>
+            <div class="command-wrapper">
+                <input type="text" class="command-input" id="omega-input" placeholder="Fale com Omega... Ex: 'Quanto eu ganhei esse mês?' ou 'Cria um projeto de marketing'" onkeypress="handleInput(event)">
+                <button class="command-send" onclick="processCommand()"><i class="ri-send-plane-fill"></i></button>
+            </div>
+        </div>
+        <div class="chat-container" id="chat-container"></div>
+    </div>
+    <script>
+        // Cursor
+        document.addEventListener('mousemove', (e) => {
+            document.getElementById('cursor').style.left = (e.clientX - 10) + 'px';
+            document.getElementById('cursor').style.top = (e.clientY - 10) + 'px';
+            document.getElementById('cursorDot').style.left = e.clientX + 'px';
+            document.getElementById('cursorDot').style.top = e.clientY + 'px';
+        });
+        // Three.js Setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('omega-canvas'), antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        camera.position.z = 50;
+        // Core
+        const core = new THREE.Mesh(new THREE.IcosahedronGeometry(12, 5), new THREE.MeshPhongMaterial({ color: 0x00d4ff, emissive: 0x00d4ff, emissiveIntensity: 0.3, wireframe: true, transparent: true, opacity: 0.7 }));
+        scene.add(core);
+        const innerCore = new THREE.Mesh(new THREE.IcosahedronGeometry(8, 3), new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.4 }));
+        scene.add(innerCore);
+        // Particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particleCount = 2000;
+        const posArray = new Float32Array(particleCount * 3);
+        const colorsArray = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const r = 30 + Math.random() * 50;
+            posArray[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+            posArray[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+            posArray[i * 3 + 2] = r * Math.cos(phi);
+            const color = new THREE.Color();
+            color.setHSL(Math.random() * 0.2 + 0.5, 0.8, 0.6);
+            colorsArray[i * 3] = color.r;
+            colorsArray[i * 3 + 1] = color.g;
+            colorsArray[i * 3 + 2] = color.b;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+        const particles = new THREE.Points(particlesGeometry, new THREE.PointsMaterial({ size: 0.3, vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending }));
+        scene.add(particles);
+        // Agents
+        const agents = [
+            { name: 'brain', emoji: '🧠', color: '#a855f7', status: 'online', task: 'Estratégia OKR' },
+            { name: 'scheduler', emoji: '📋', color: '#3b82f6', status: 'busy', task: 'Atualizando cronogramas' },
+            { name: 'trader', emoji: '📈', color: '#10b981', status: 'busy', task: 'Analisando BTC' },
+            { name: 'trend_analyst', emoji: '📊', color: '#f59e0b', status: 'online', task: 'Relatório diário' },
+            { name: 'quality_auditor', emoji: '✅', color: '#ef4444', status: 'online', task: 'QA em projetos' },
+            { name: 'crypto_analyst', emoji: '₿', color: '#00d4ff', status: 'online', task: 'Sinais de trade' },
+            { name: 'daily_planner', emoji: '📅', color: '#8b5cf6', status: 'online', task: 'Planejando dia' },
+            { name: 'habit_tracker', emoji: '✅', color: '#10b981', status: 'offline', task: 'Monitorando hábitos' }
+        ];
+        const agentMeshes = [];
+        agents.forEach((agent, i) => {
+            const angle = (i / agents.length) * Math.PI * 2;
+            const radius = 25;
+            const mesh = new THREE.Mesh(new THREE.SphereGeometry(1.5, 32, 32), new THREE.MeshPhongMaterial({ color: agent.color, emissive: agent.color, emissiveIntensity: 0.5 }));
+            scene.add(mesh);
+            agentMeshes.push({ mesh, ...agent, baseAngle: angle, speed: 0.3 + Math.random() * 0.5 });
+        });
+        scene.add(new THREE.AmbientLight(0x404040, 1));
+        scene.add(new THREE.PointLight(0x00d4ff, 2, 100));
+        scene.add(new THREE.PointLight(0xa855f7, 1.5, 100));
+        // Animation
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+            core.rotation.x += 0.002;
+            core.rotation.y += 0.004;
+            innerCore.rotation.x -= 0.001;
+            innerCore.rotation.y -= 0.003;
+            particles.rotation.y += 0.0003;
+            agentMeshes.forEach((agent, i) => {
+                const angle = agent.baseAngle + time * agent.speed;
+                const radius = 25 + Math.sin(time + i) * 3;
+                agent.mesh.position.x = Math.cos(angle) * radius;
+                agent.mesh.position.z = Math.sin(angle) * radius;
+                agent.mesh.position.y = Math.sin(time * 2 + i) * 3;
+            });
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        // Render Agents
+        document.getElementById('agents-list').innerHTML = agents.map(agent => `
+            <div class="agent-card" onclick="selectAgent('${agent.name}')">
+                <div class="agent-avatar" style="background: ${agent.color}20; color: ${agent.color};">${agent.emoji}</div>
+                <div class="agent-info"><div class="agent-name">${agent.name}</div><div class="agent-status">${agent.task}</div></div>
+                <div class="agent-indicator" style="background: ${agent.status === 'online' ? '#10b981' : agent.status === 'busy' ? '#f59e0b' : '#6b7280'}; box-shadow: 0 0 10px ${agent.status === 'online' ? '#10b981' : agent.status === 'busy' ? '#f59e0b' : 'transparent'};"></div>
+            </div>
+        `).join('');
+        // Responses
+        const omegaResponses = {
+            'projetos': { avatar: '📊', color: '#3b82f6', message: '📊 <strong>Projetos Ativos:</strong><br>• PROJ-004: Trading Dashboard — Em Validação QA<br>• PROJ-003: FactoryOS Dashboard — Concluído<br>• PROJ-002: Melhoria Visual — Concluído<br>• PROJ-001: Procedure Check — Concluído' },
+            'trading': { avatar: '📈', color: '#10b981', message: '💰 <strong>Status de Trading:</strong><br>• BTC: $104,230 (+2.3%)<br>• Positions: 3 ativas<br>• PnL Mensal: +12.5%' },
+            'finanças': { avatar: '💵', color: '#fbbf24', message: '💵 <strong>Resumo Financeiro:</strong><br>• Receita do Mês: $8,500<br>• Despesas: $3,200<br>• Lucro: $5,300<br>• Margem: 62%' },
+            'agentes': { avatar: '🤖', color: '#a855f7', message: '🤖 <strong>Rede de Agentes (26 online):</strong><br>• 🧠 brain — Estratégia<br>• 📈 trader — Execução<br>• 📊 trend_analyst — Inteligência<br>• 📋 scheduler — Planejamento' },
+            'status': { avatar: '✅', color: '#10b981', message: '✅ <strong>Status do Sistema:</strong><br>• Uptime: 99.9%<br>• 26/26 agentes operacionais<br>• 4 processando<br>• 0 erros críticos' },
+            'criar projeto': { avatar: '➕', color: '#00d4ff', message: '➕ <strong>Criando novo projeto...</strong><br>Me diz: 1. Nome 2. Objetivo 3. Prazo 4. Prioridade<br>Eu cuido do resto! 🚀' },
+            'ajuda': { avatar: '❓', color: '#f59e0b', message: '❓ <strong>Comandos:</strong><br>• "projetos" • "trading" • "finanças"<br>• "agentes" • "status" • "criar projeto [nome]"' },
+            'default': { avatar: '🤖', color: '#00d4ff', message: '🔄 <strong>Processando:</strong> "{input}"...<br>Tenta: "projetos", "trading", "finanças", "agentes"' }
+        };
+        function addMessage(input, isUser = true) {
+            const container = document.getElementById('chat-container');
+            const msg = document.createElement('div');
+            msg.className = 'chat-message';
+            msg.style.marginLeft = isUser ? 'auto' : '0';
+            msg.style.maxWidth = isUser ? '80%' : '90%';
+            msg.style.textAlign = isUser ? 'right' : 'left';
+            msg.style.background = isUser ? 'rgba(0, 212, 255, 0.08)' : 'var(--bg-card)';
+            msg.innerHTML = isUser 
+                ? `<div class="chat-text">${input}</div>`
+                : `<div style="display: flex; align-items: flex-start; gap: 0.75rem;"><div class="chat-avatar" style="background: ${omegaResponses[input.toLowerCase()]?.color || '#00d4ff'}20; color: ${omegaResponses[input.toLowerCase()]?.color || '#00d4ff'}; flex-shrink: 0;">${omegaResponses[input.toLowerCase()]?.avatar || '🤖'}</div><div class="chat-content"><div class="chat-name">Omega AI</div><div class="chat-text">${(omegaResponses[input.toLowerCase()]?.message || omegaResponses['default'].message.replace('{input}', input))}</div></div></div>`;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+        }
+        function handleInput(e) { if (e.key === 'Enter') processCommand(); }
+        function processCommand() {
+            const input = document.getElementById('omega-input').value.trim();
+            if (!input) return;
+            addMessage(input, true);
+            setTimeout(() => addMessage(input, false), 500);
+            document.getElementById('omega-input').value = '';
+        }
+        function sendCommand(cmd) {
+            document.getElementById('omega-input').value = cmd;
+            processCommand();
+        }
+        function selectAgent(name) {
+            addMessage(`Interagindo com ${name}...`, false);
+        }
+        // Animate progress ring
+        setTimeout(() => {
+            document.getElementById('progress-ring').style.strokeDashoffset = 37;
+        }, 500);
+        // Initial welcome
+        setTimeout(() => addMessage('Bem-vindo ao FactoryOS Omega! 🧠<br>Digite um comando ou clique nos botões para começar.', false), 1000);
+    </script>
+</body>
+</html>
