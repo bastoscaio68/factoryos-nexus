@@ -144,16 +144,31 @@
             background: rgba(15,15,25,0.95); border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px; backdrop-filter: blur(20px); overflow: hidden;
         }
+        @media (max-width: 1024px) {
+            .chat-widget { right: 24px; width: 350px; bottom: 280px; }
+        }
+        @media (max-width: 768px) {
+            .chat-widget { right: 12px; left: 12px; width: auto; bottom: 90px; }
+        }
+        @media (max-width: 480px) {
+            .chat-widget { bottom: 85px; border-radius: 12px; }
+        }
         .chat-header { padding: 16px; background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(168,85,247,0.2)); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
         .chat-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #00d4ff, #a855f7); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
         .chat-title { font-weight: 600; font-size: 14px; }
         .chat-status { font-size: 12px; color: rgba(255,255,255,0.5); }
         .chat-messages { height: 200px; padding: 16px; overflow-y: auto; }
+        @media (max-width: 768px) {
+            .chat-messages { height: 150px; }
+        }
         .chat-msg { margin-bottom: 12px; display: flex; flex-direction: column; }
         .chat-msg.user { align-items: flex-end; }
         .chat-msg.user .msg-bubble { background: linear-gradient(135deg, #00d4ff, #00ffcc); color: #020205; }
         .chat-msg.omega .msg-bubble { background: rgba(255,255,255,0.1); }
         .msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; max-width: 280px; }
+        @media (max-width: 768px) {
+            .msg-bubble { font-size: 14px; padding: 12px 16px; max-width: 100%; }
+        }
         .chat-input-area { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px; }
         .chat-input { flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 13px; outline: none; }
         .chat-input:focus { border-color: rgba(0,212,255,0.5); }
@@ -164,15 +179,58 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
         
-        /* RESPONSIVE */
-        @media (max-width: 1400px) {
+        /* RESPONSIVE - MOBILE FRIENDLY */
+        @media (max-width: 1200px) {
             .grid { grid-template-columns: 240px 1fr 280px; }
-            .chat-widget { right: 300px; width: 350px; }
         }
-        @media (max-width: 1100px) {
-            .grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
-            .left-panel, .right-panel { display: none; }
-            .chat-widget { right: 24px; bottom: 250px; width: calc(100vw - 48px); }
+        @media (max-width: 1024px) {
+            .grid {
+                inset: 80px 16px 16px;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+                gap: 16px;
+            }
+            .header-stats { gap: 12px; }
+            .stat-pill { padding: 6px 12px; font-size: 11px; }
+            .logo-text { font-size: 16px; }
+            .logo-icon { width: 36px; height: 36px; font-size: 16px; }
+        }
+        @media (max-width: 768px) {
+            .header { padding: 0 16px; height: 55px; }
+            .header-stats { display: none; }
+            .logo-text { font-size: 14px; }
+            .logo-icon { width: 32px; height: 32px; font-size: 14px; }
+            .grid { inset: 70px 12px 12px; gap: 12px; }
+            .card { border-radius: 12px; }
+            .card-header { padding: 12px 16px; }
+            .card-body { padding: 16px; }
+            .main-area { grid-template-rows: auto auto; }
+            .pnl-value { font-size: 32px; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .metric-value { font-size: 20px; }
+            .actions-grid { grid-template-columns: repeat(4, 1fr); }
+            .chat-widget {
+                right: 12px; left: 12px; bottom: 80px;
+                width: auto;
+            }
+            .chat-messages { height: 150px; }
+        }
+        @media (max-width: 480px) {
+            .logo-text span { display: none; }
+            .logo-text:after { content: 'NEXUS'; }
+            .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .metric-box { padding: 12px; }
+            .metric-value { font-size: 18px; }
+            .actions-grid { grid-template-columns: repeat(2, 1fr); }
+            .bottom-panel { grid-template-columns: 1fr; }
+            .chat-widget {
+                right: 12px; left: 12px; bottom: 90px;
+                width: auto; max-width: none;
+            }
+        }
+        @media (max-width: 380px) {
+            .chat-widget { bottom: 100px; }
+            .pnl-value { font-size: 28px; }
         }
     </style>
 </head>
@@ -539,3 +597,4 @@
     </script>
 </body>
 </html>
+<!-- deploy Mon Feb 16 04:38:52 PM -03 2026 -->
