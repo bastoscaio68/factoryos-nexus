@@ -1,0 +1,12 @@
+{
+  "name": "factoryos-omega",
+  "version": "1.0.0",
+  "description": "FactoryOS Omega - O Agente Pessoal AI mais avançado",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static site'"
+  },
+  "keywords": ["ai", "agents", "dashboard", "factoryos"],
+  "author": "FactoryOS Team",
+  "license": "MIT"
+}
