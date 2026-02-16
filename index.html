@@ -3,652 +3,539 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FactoryOS Nexus — Sistema Nervoso Central</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+    <title>FactoryOS Nexus — Command Center</title>
     <style>
-        :root {
-            --nexus-blue: #00d4ff;
-            --nexus-cyan: #00ffcc;
-            --nexus-purple: #a855f7;
-            --nexus-pink: #ec4899;
-            --bg-deep: #0a0a0f;
-            --bg-card: rgba(15, 15, 25, 0.9);
-            --glass: rgba(255, 255, 255, 0.05);
-        }
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-deep);
-            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #020205;
+            color: #fff;
             overflow: hidden;
+            height: 100vh;
         }
+        #bg { position: fixed; inset: 0; z-index: 0; }
         
-        #nexus-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-        }
-        
-        .ui-layer {
-            position: relative;
-            z-index: 10;
-            pointer-events: none;
-        }
-        
-        .ui-layer > * {
-            pointer-events: auto;
-        }
-        
-        /* Header */
+        /* HEADER */
         .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(180deg, rgba(10,10,15,0.95) 0%, transparent 100%);
-            z-index: 100;
+            position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: linear-gradient(180deg, rgba(2,2,5,0.95) 0%, transparent 100%);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
+        .logo { display: flex; align-items: center; gap: 12px; }
         .logo-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--nexus-blue), var(--nexus-cyan));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
-            animation: pulse-glow 3s infinite;
+            width: 40px; height: 40px; background: linear-gradient(135deg, #00d4ff, #a855f7);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: bold;
+        }
+        .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+        .logo-text span { background: linear-gradient(135deg, #00d4ff, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-stats { display: flex; gap: 24px; }
+        .stat-pill {
+            display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+            background: rgba(255,255,255,0.05); border-radius: 50px; font-size: 13px;
+        }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot.green { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        .dot.yellow { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+        
+        /* GRID LAYOUT */
+        .grid {
+            position: fixed; inset: 80px 24px 24px; display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            grid-template-rows: 1fr 200px;
+            gap: 20px; z-index: 10;
         }
         
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 30px rgba(0, 212, 255, 0.5); }
-            50% { box-shadow: 0 0 50px rgba(0, 212, 255, 0.8); }
+        /* CARDS */
+        .card {
+            background: rgba(15,15,25,0.9); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; backdrop-filter: blur(20px); overflow: hidden;
         }
-        
-        .logo-text {
-            font-size: 1.75rem;
-            font-weight: 700;
+        .card-header {
+            padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex; align-items: center; justify-content: space-between;
         }
+        .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); }
+        .card-body { padding: 20px; overflow-y: auto; height: calc(100% - 53px); }
         
-        .logo-text span {
-            background: linear-gradient(135deg, var(--nexus-blue), var(--nexus-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* AGENTS PANEL */
+        .agents-list { display: flex; flex-direction: column; gap: 8px; }
+        .agent-row {
+            display: flex; align-items: center; gap: 12px; padding: 12px;
+            background: rgba(255,255,255,0.03); border-radius: 10px;
+            border: 1px solid transparent; cursor: pointer; transition: all 0.2s;
         }
-        
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            border-radius: 50px;
-            font-size: 0.85rem;
-            color: #10b981;
+        .agent-row:hover { background: rgba(0,212,255,0.08); border-color: rgba(0,212,255,0.2); }
+        .agent-avatar {
+            width: 36px; height: 36px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
         }
+        .agent-info { flex: 1; }
+        .agent-name { font-weight: 600; font-size: 14px; }
+        .agent-task { font-size: 12px; color: rgba(255,255,255,0.4); }
+        .agent-status { width: 8px; height: 8px; border-radius: 50%; }
         
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            animation: blink 2s infinite;
+        /* MAIN DASHBOARD */
+        .main-area { display: grid; grid-template-rows: 1fr 1fr; gap: 20px; }
+        .chart-container { position: relative; height: 100%; min-height: 200px; }
+        .chart-title { position: absolute; top: 16px; left: 20px; font-size: 14px; font-weight: 600; }
+        .pnl-big {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center;
         }
+        .pnl-value { font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #10b981, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .pnl-label { font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 8px; }
         
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
+        /* METRICS GRID */
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .metric-box {
+            background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
+        .metric-label { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+        .metric-value { font-size: 24px; font-weight: 700; }
+        .metric-value.blue { background: linear-gradient(135deg, #00d4ff, #00ffcc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .metric-value.green { background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .metric-value.purple { background: linear-gradient(135deg, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .metric-value.yellow { background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .metric-change { font-size: 12px; margin-top: 4px; }
+        .metric-change.up { color: #10b981; }
+        .metric-change.down { color: #ef4444; }
         
-        /* Command Center */
-        .command-center {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
+        /* TRADING PANEL */
+        .trades-list { display: flex; flex-direction: column; gap: 8px; }
+        .trade-row {
+            display: flex; align-items: center; gap: 12px; padding: 12px;
+            background: rgba(255,255,255,0.03); border-radius: 10px;
         }
+        .trade-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .trade-info { flex: 1; }
+        .trade-pair { font-weight: 600; font-size: 14px; }
+        .trade-size { font-size: 12px; color: rgba(255,255,255,0.4); }
+        .trade-pnl { font-weight: 600; font-size: 14px; }
+        .trade-pnl.positive { color: #10b981; }
+        .trade-pnl.negative { color: #ef4444; }
         
-        .command-input {
-            width: 600px;
-            max-width: 90vw;
-            padding: 1rem 1.5rem;
-            background: var(--bg-card);
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        /* BOTTOM PANEL */
+        .bottom-panel { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .console-output { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.8; color: rgba(255,255,255,0.6); }
+        .console-line { display: flex; gap: 12px; }
+        .console-time { color: rgba(255,255,255,0.3); }
+        .console-type { width: 60px; font-weight: 600; }
+        .console-type.info { color: #00d4ff; }
+        .console-type.success { color: #10b981; }
+        .console-type.warning { color: #f59e0b; }
+        .console-type.error { color: #ef4444; }
+        
+        /* QUICK ACTIONS */
+        .actions-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .action-btn {
+            padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px; color: rgba(255,255,255,0.7); font-size: 12px; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all 0.2s;
         }
+        .action-btn:hover { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3); color: white; }
+        .action-icon { font-size: 20px; }
         
-        .command-input:focus-within {
-            border-color: var(--nexus-blue);
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+        /* CHAT WIDGET */
+        .chat-widget {
+            position: fixed; bottom: 24px; right: 360px; width: 400px; z-index: 100;
+            background: rgba(15,15,25,0.95); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; backdrop-filter: blur(20px); overflow: hidden;
         }
+        .chat-header { padding: 16px; background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(168,85,247,0.2)); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .chat-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #00d4ff, #a855f7); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .chat-title { font-weight: 600; font-size: 14px; }
+        .chat-status { font-size: 12px; color: rgba(255,255,255,0.5); }
+        .chat-messages { height: 200px; padding: 16px; overflow-y: auto; }
+        .chat-msg { margin-bottom: 12px; display: flex; flex-direction: column; }
+        .chat-msg.user { align-items: flex-end; }
+        .chat-msg.user .msg-bubble { background: linear-gradient(135deg, #00d4ff, #00ffcc); color: #020205; }
+        .chat-msg.omega .msg-bubble { background: rgba(255,255,255,0.1); }
+        .msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; max-width: 280px; }
+        .chat-input-area { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px; }
+        .chat-input { flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 13px; outline: none; }
+        .chat-input:focus { border-color: rgba(0,212,255,0.5); }
+        .chat-send { width: 40px; height: 40px; background: linear-gradient(135deg, #00d4ff, #00ffcc); border: none; border-radius: 10px; color: #020205; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
         
-        .command-input input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: white;
-            font-size: 1rem;
-            font-family: 'JetBrains Mono', monospace;
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        
+        /* RESPONSIVE */
+        @media (max-width: 1400px) {
+            .grid { grid-template-columns: 240px 1fr 280px; }
+            .chat-widget { right: 300px; width: 350px; }
         }
-        
-        .command-input input::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-        
-        .command-send {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--nexus-blue), var(--nexus-cyan));
-            border: none;
-            border-radius: 10px;
-            color: var(--bg-deep);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-        }
-        
-        .command-send:hover {
-            transform: scale(1.1);
-        }
-        
-        /* Agent Cards Panel */
-        .agents-panel {
-            position: fixed;
-            top: 100px;
-            right: 2rem;
-            width: 320px;
-            max-height: calc(100vh - 200px);
-            overflow-y: auto;
-            z-index: 50;
-        }
-        
-        .agent-card {
-            background: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-        }
-        
-        .agent-card:hover {
-            border-color: var(--nexus-blue);
-            transform: translateX(-5px);
-        }
-        
-        .agent-card.active {
-            border-color: rgba(16, 185, 129, 0.5);
-            background: rgba(16, 185, 129, 0.1);
-        }
-        
-        .agent-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-        
-        .agent-name {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-        
-        .agent-status {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-        
-        .agent-status.active { background: #10b981; box-shadow: 0 0 10px #10b981; }
-        .agent-status.busy { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
-        .agent-status.inactive { background: #6b7280; }
-        
-        .agent-activity {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        /* Metrics Panel */
-        .metrics-panel {
-            position: fixed;
-            top: 100px;
-            left: 2rem;
-            z-index: 50;
-        }
-        
-        .metric-card {
-            background: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 1rem 1.25rem;
-            margin-bottom: 0.75rem;
-            backdrop-filter: blur(10px);
-            min-width: 180px;
-        }
-        
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--nexus-blue), var(--nexus-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .metric-label {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.6);
-            margin-top: 0.25rem;
-        }
-        
-        /* Quick Actions */
-        .quick-actions {
-            position: fixed;
-            top: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 0.5rem;
-            z-index: 50;
-        }
-        
-        .quick-btn {
-            padding: 0.6rem 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            backdrop-filter: blur(10px);
-        }
-        
-        .quick-btn:hover {
-            background: rgba(0, 212, 255, 0.2);
-            border-color: var(--nexus-blue);
-        }
-        
-        /* Notifications */
-        .notifications {
-            position: fixed;
-            bottom: 120px;
-            right: 2rem;
-            width: 300px;
-            z-index: 100;
-        }
-        
-        .notification {
-            background: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            backdrop-filter: blur(10px);
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
+        @media (max-width: 1100px) {
+            .grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+            .left-panel, .right-panel { display: none; }
+            .chat-widget { right: 24px; bottom: 250px; width: calc(100vw - 48px); }
         }
     </style>
 </head>
 <body>
-    <!-- Nexus 3D Canvas -->
-    <canvas id="nexus-canvas"></canvas>
+    <canvas id="bg"></canvas>
     
-    <!-- UI Layer -->
-    <div class="ui-layer">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon">⚡</div>
-                <div class="logo-text">FactoryOS <span>Nexus</span></div>
-            </div>
-            <div class="status-indicator">
-                <div class="status-dot"></div>
-                <span>Sistema Online</span>
-            </div>
-        </header>
-        
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-            <button class="quick-btn" onclick="showSection('projects')">📊 Projetos</button>
-            <button class="quick-btn" onclick="showSection('trading')">💰 Trading</button>
-            <button class="quick-btn" onclick="showSection('finance')">📈 Finanças</button>
-            <button class="quick-btn" onclick="showSection('agents')">🤖 Agentes</button>
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text">FACTORYOS <span>NEXUS</span></div>
         </div>
-        
-        <!-- Metrics Panel -->
-        <div class="metrics-panel">
-            <div class="metric-card">
-                <div class="metric-value" id="metric-projects">4</div>
-                <div class="metric-label">Projetos Ativos</div>
+        <div class="header-stats">
+            <div class="stat-pill"><div class="dot green"></div>26 Agentes Online</div>
+            <div class="stat-pill"><div class="dot yellow"></div>4 Processando</div>
+            <div class="stat-pill"><div class="dot green"></div>Uptime 99.9%</div>
+        </div>
+        <div style="font-size: 13px; color: rgba(255,255,255,0.4);" id="clock">16:09:32</div>
+    </header>
+    
+    <div class="grid">
+        <!-- LEFT: AGENTS -->
+        <div class="card left-panel">
+            <div class="card-header">
+                <span class="card-title">🧠 Agent Network</span>
+                <span style="font-size: 12px; color: rgba(255,255,255,0.4);">26</span>
             </div>
-            <div class="metric-card">
-                <div class="metric-value" id="metric-agents">26</div>
-                <div class="metric-label">Agentes Online</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value" id="metric-pnl">+12.5%</div>
-                <div class="metric-label">PnL Mensal</div>
+            <div class="card-body">
+                <div class="agents-list" id="agents-list"></div>
             </div>
         </div>
         
-        <!-- Agents Panel -->
-        <div class="agents-panel">
-            <div class="agent-card active" onclick="selectAgent('brain')">
-                <div class="agent-header">
-                    <span class="agent-name">🧠 brain</span>
-                    <div class="agent-status active"></div>
+        <!-- MAIN: CHARTS & METRICS -->
+        <div class="main-area">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📈 Trading Performance</span>
                 </div>
-                <div class="agent-activity">Estratégia OKR em andamento</div>
+                <div class="card-body" style="position: relative;">
+                    <canvas id="pnl-chart"></canvas>
+                    <div class="pnl-big">
+                        <div class="pnl-value">+$12,450</div>
+                        <div class="pnl-label">PnL Mensal • +12.5%</div>
+                    </div>
+                </div>
             </div>
-            <div class="agent-card" onclick="selectAgent('scheduler')">
-                <div class="agent-header">
-                    <span class="agent-name">📋 scheduler</span>
-                    <div class="agent-status active"></div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📊 System Metrics</span>
                 </div>
-                <div class="agent-activity">Atualizando cronogramas</div>
-            </div>
-            <div class="agent-card" onclick="selectAgent('trader')">
-                <div class="agent-header">
-                    <span class="agent-name">📈 trader</span>
-                    <div class="agent-status busy"></div>
+                <div class="card-body">
+                    <div class="metrics-grid">
+                        <div class="metric-box">
+                            <div class="metric-label">Projetos Ativos</div>
+                            <div class="metric-value blue">4</div>
+                            <div class="metric-change up">↑ 2 esta semana</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-label">Receita Mês</div>
+                            <div class="metric-value green">$8,500</div>
+                            <div class="metric-change up">↑ 15% vs M-1</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-label">Trades/Dia</div>
+                            <div class="metric-value purple">23</div>
+                            <div class="metric-change up">Win Rate 68%</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-label">Eficiência</div>
+                            <div class="metric-value yellow">87%</div>
+                            <div class="metric-change up">↑ 5%</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="agent-activity">Analisando BTC/USDT</div>
-            </div>
-            <div class="agent-card" onclick="selectAgent('trend_analyst')">
-                <div class="agent-header">
-                    <span class="agent-name">📊 trend_analyst</span>
-                    <div class="agent-status active"></div>
-                </div>
-                <div class="agent-activity">Gerando relatório diário</div>
-            </div>
-            <div class="agent-card" onclick="selectAgent('quality_auditor')">
-                <div class="agent-header">
-                    <span class="agent-name">✅ quality_auditor</span>
-                    <div class="agent-status inactive"></div>
-                </div>
-                <div class="agent-activity">Aguardando tarefas</div>
             </div>
         </div>
         
-        <!-- Command Center -->
-        <div class="command-center">
-            <div class="command-input">
-                <i class="ri-command-line" style="color: rgba(255,255,255,0.4); font-size: 1.2rem;"></i>
-                <input type="text" id="command-input" placeholder="Digite um comando ou pergunta..." onkeypress="handleCommand(event)">
-                <button class="command-send" onclick="executeCommand()">
-                    <i class="ri-send-plane-fill"></i>
-                </button>
+        <!-- RIGHT: TRADING -->
+        <div class="card right-panel">
+            <div class="card-header">
+                <span class="card-title">💰 Active Positions</span>
+                <span style="font-size: 12px; color: rgba(255,255,255,0.4);">3</span>
+            </div>
+            <div class="card-body">
+                <div class="trades-list" id="trades-list"></div>
             </div>
         </div>
         
-        <!-- Notifications -->
-        <div class="notifications" id="notifications"></div>
+        <!-- BOTTOM: CONSOLE & ACTIONS -->
+        <div class="bottom-panel">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">⚡ System Console</span>
+                </div>
+                <div class="card-body">
+                    <div class="console-output" id="console"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🚀 Quick Actions</span>
+                </div>
+                <div class="card-body">
+                    <div class="actions-grid">
+                        <button class="action-btn" onclick="cmd('projetos')">
+                            <span class="action-icon">📋</span>
+                            <span>Projetos</span>
+                        </button>
+                        <button class="action-btn" onclick="cmd('novo projeto')">
+                            <span class="action-icon">➕</span>
+                            <span>Novo Projeto</span>
+                        </button>
+                        <button class="action-btn" onclick="cmd('trading')">
+                            <span class="action-icon">📈</span>
+                            <span>Trading</span>
+                        </button>
+                        <button class="action-btn" onclick="cmd('relatorio')">
+                            <span class="action-icon">📊</span>
+                            <span>Relatório</span>
+                        </button>
+                        <button class="action-btn" onclick="cmd('agentes')">
+                            <span class="action-icon">🤖</span>
+                            <span>Agentes</span>
+                        </button>
+                        <button class="action-btn" onclick="cmd('finanças')">
+                            <span class="action-icon">💵</span>
+                            <span>Finanças</span>
+                        </button>
+                        <button class="action-btn" onclick="cmd('status')">
+                            <span class="action-icon">✅</span>
+                            <span>Status</span>
+                        </button>
+                        <button class="action-btn" onclick="cmd('ajuda')">
+                            <span class="action-icon">❓</span>
+                            <span>Ajuda</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
+    
+    <!-- CHAT WIDGET -->
+    <div class="chat-widget">
+        <div class="chat-header">
+            <div class="chat-avatar">🤖</div>
+            <div>
+                <div class="chat-title">Omega AI</div>
+                <div class="chat-status">Online • Processando comandos</div>
+            </div>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Fale com Nexus..." onkeypress="if(event.key==='Enter')sendChat()">
+            <button class="chat-send" onclick="sendChat()">➤</button>
+        </div>
+    </div>
+    
     <script>
-        // ========================================
-        // FACTORYOS NEXUS — CORE ENGINE
-        // ========================================
-        
-        // Scene Setup
-        const canvas = document.getElementById('nexus-canvas');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-        
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        
-        camera.position.z = 50;
-        
-        // Orbit Controls
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.5;
-        
-        // Nexus Core Globe
-        const coreGeometry = new THREE.IcosahedronGeometry(10, 4);
-        const coreMaterial = new THREE.MeshPhongMaterial({
-            color: 0x00d4ff,
-            emissive: 0x00d4ff,
-            emissiveIntensity: 0.2,
-            wireframe: true,
-            transparent: true,
-            opacity: 0.6
-        });
-        const core = new THREE.Mesh(coreGeometry, coreMaterial);
-        scene.add(core);
-        
-        // Inner Core Glow
-        const innerGlow = new THREE.Mesh(
-            new THREE.IcosahedronGeometry(8, 2),
-            new THREE.MeshBasicMaterial({
-                color: 0x00ffcc,
-                transparent: true,
-                opacity: 0.3
-            })
-        );
-        scene.add(innerGlow);
-        
-        // Agent Nodes
+        // ========== CONFIG ==========
         const agents = [
-            { name: 'brain', color: 0xa855f7, position: [15, 8, 0] },
-            { name: 'scheduler', color: 0x3b82f6, position: [-15, 8, 0] },
-            { name: 'trader', color: 0x10b981, position: [0, 15, 10] },
-            { name: 'trend_analyst', color: 0xf59e0b, position: [0, -10, 12] },
-            { name: 'quality_auditor', color: 0xef4444, position: [12, -8, -8] },
-            { name: 'crypto_analyst', color: 0x00d4ff, position: [-12, -5, -10] }
+            { name: 'brain', emoji: '🧠', color: '#a855f7', task: 'Estratégia OKR', status: 'online' },
+            { name: 'scheduler', emoji: '📋', color: '#3b82f6', task: 'Cronogramas', status: 'busy' },
+            { name: 'trader', emoji: '📈', color: '#10b981', task: 'Analisando BTC', status: 'busy' },
+            { name: 'trend_analyst', emoji: '📊', color: '#f59e0b', task: 'Relatório diário', status: 'online' },
+            { name: 'quality_auditor', emoji: '✅', color: '#ef4444', task: 'QA Projects', status: 'online' },
+            { name: 'crypto_analyst', emoji: '₿', color: '#00d4ff', task: 'Sinais Trade', status: 'online' },
+            { name: 'daily_planner', emoji: '📅', color: '#8b5cf6', task: 'Planejando dia', status: 'online' },
+            { name: 'market_monitor', emoji: '📡', color: '#06b6d4', task: 'Scanning market', status: 'online' },
+            { name: 'proposal_gen', emoji: '📝', color: '#ec4899', task: 'Gerando proposta', status: 'busy' },
+            { name: 'billing', emoji: '💳', color: '#22c55e', task: 'Processando invoice', status: 'online' }
         ];
         
-        const agentNodes = [];
+        const trades = [
+            { pair: 'BTC/USDT', size: '0.5 BTC', pnl: '+2.3%', icon: '₿', color: '#f7931a' },
+            { pair: 'ETH/USDT', size: '4.2 ETH', pnl: '+1.8%', icon: 'Ξ', color: '#627eea' },
+            { pair: 'SOL/USDT', size: '25 SOL', pnl: '-0.5%', icon: '◎', color: '#9945ff' }
+        ];
         
-        agents.forEach((agent, index) => {
-            // Node sphere
-            const node = new THREE.Mesh(
-                new THREE.SphereGeometry(1.5, 32, 32),
-                new THREE.MeshPhongMaterial({
-                    color: agent.color,
-                    emissive: agent.color,
-                    emissiveIntensity: 0.5
-                })
-            );
-            node.position.set(...agent.position);
-            scene.add(node);
-            agentNodes.push({ mesh: node, ...agent, angle: (index / agents.length) * Math.PI * 2 });
-            
-            // Orbit ring
-            const ringGeometry = new THREE.TorusGeometry(Math.sqrt(agent.position[0]**2 + agent.position[1]**2 + agent.position[2]**2), 0.05, 16, 100);
-            const ringMaterial = new THREE.MeshBasicMaterial({
-                color: agent.color,
-                transparent: true,
-                opacity: 0.2
-            });
-            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-            scene.add(ring);
-        });
+        const consoleLines = [
+            { time: '16:09:32', type: 'info', msg: 'brain: Análise OKR Q1 concluída' },
+            { time: '16:09:30', type: 'success', msg: 'trader: Entrada BTC executada @ $104,230' },
+            { time: '16:09:28', type: 'info', msg: 'trend_analyst: Relatório de mercado gerado' },
+            { time: '16:09:25', type: 'warning', msg: 'market_monitor: Alerta — VOL aumento 15%' },
+            { time: '16:09:22', type: 'success', msg: 'billing: Invoice #2847 enviado — $2,500' },
+            { time: '16:09:20', type: 'info', msg: 'scheduler: Cronograma PROJ-005 atualizado' }
+        ];
         
-        // Particles Background
-        const particlesGeometry = new THREE.BufferGeometry();
-        const particleCount = 1000;
-        const posArray = new Float32Array(particleCount * 3);
+        const responses = {
+            'projetos': '📋 <strong>Projetos Ativos:</strong><br>• PROJ-005: Omega/Nexus — Em dev<br>• PROJ-004: Trading Dashboard — QA aprovado<br>• PROJ-003: FactoryOS Dashboard — ✅<br>• PROJ-002: Melhoria Visual — ✅',
+            'trading': '💰 <strong>Posições Abertas:</strong><br>• BTC: +2.3% ($1,200)<br>• ETH: +1.8% ($780)<br>• SOL: -0.5% (-$230)<br><strong>Total:</strong> +$1,750',
+            'finanças': '💵 <strong>Resumo Financeiro:</strong><br>• Receita: $8,500/mês<br>• Despesas: $3,200<br>• Lucro: $5,300 (62%)',
+            'agentes': '🤖 <strong>26 Agentes Online:</strong><br>• 🧠 brain — Estratégia<br>• 📈 trader — Trading<br>• 📊 trend_analyst — Relatórios<br>• 📋 scheduler — Planejamento',
+            'status': '✅ <strong>Status Sistema:</strong><br>• 26/26 agentes operacionais<br>• Uptime: 99.9%<br>• 4 processando<br>• 0 erros',
+            'ajuda': '❓ <strong>Comandos:</strong><br>• projetos, trading, finanças<br>• status, agentes, novo projeto<br>• "fala com [agente]"',
+            'novo projeto': '➕ <strong>Criar Novo Projeto:</strong><br>Me diga: nome, objetivo e prioridade.<br>Eu crio a estrutura completa!',
+            'relatorio': '📊 <strong>Relatórios:</strong><br>• PnL Diário: +$450<br>• PnL Semanal: +$2,100<br>• PnL Mensal: +$12,450'
+        };
         
-        for (let i = 0; i < particleCount * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 200;
+        // ========== RENDER AGENTS ==========
+        document.getElementById('agents-list').innerHTML = agents.map(a => `
+            <div class="agent-row" onclick="cmd('fala com ${a.name}')">
+                <div class="agent-avatar" style="background:${a.color}20;color:${a.color}">${a.emoji}</div>
+                <div class="agent-info">
+                    <div class="agent-name">${a.name}</div>
+                    <div class="agent-task">${a.task}</div>
+                </div>
+                <div class="agent-status" style="background:${a.status==='online'?'#10b981':'#f59e0b'};box-shadow:0 0 10px ${a.status==='online'?'#10b981':'#f59e0b'}"></div>
+            </div>
+        `).join('');
+        
+        // ========== RENDER TRADES ==========
+        document.getElementById('trades-list').innerHTML = trades.map(t => `
+            <div class="trade-row">
+                <div class="trade-icon" style="background:${t.color}20;color:${t.color}">${t.icon}</div>
+                <div class="trade-info">
+                    <div class="trade-pair">${t.pair}</div>
+                    <div class="trade-size">${t.size}</div>
+                </div>
+                <div class="trade-pnl ${t.pnl.startsWith('+')?'positive':'negative'}">${t.pnl}</div>
+            </div>
+        `).join('');
+        
+        // ========== RENDER CONSOLE ==========
+        function addConsoleLine(line) {
+            const c = document.getElementById('console');
+            c.innerHTML += `
+                <div class="console-line">
+                    <span class="console-time">${line.time}</span>
+                    <span class="console-type ${line.type}">[${line.type.toUpperCase()}]</span>
+                    <span>${line.msg}</span>
+                </div>
+            `;
+            c.scrollTop = c.scrollHeight;
         }
+        consoleLines.forEach(addConsoleLine);
         
-        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.1,
-            color: 0x00d4ff,
-            transparent: true,
-            opacity: 0.6
-        });
-        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-        scene.add(particles);
-        
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0x404040, 1);
-        scene.add(ambientLight);
-        
-        const pointLight = new THREE.PointLight(0x00d4ff, 2, 100);
-        pointLight.position.set(20, 20, 20);
-        scene.add(pointLight);
-        
-        // Animation Loop
-        let time = 0;
-        function animate() {
-            requestAnimationFrame(animate);
-            time += 0.01;
-            
-            // Rotate core
-            core.rotation.x += 0.002;
-            core.rotation.y += 0.003;
-            innerGlow.rotation.x -= 0.001;
-            innerGlow.rotation.y -= 0.002;
-            
-            // Animate agent nodes
-            agentNodes.forEach((agent, index) => {
-                const angle = agent.angle + time * 0.5;
-                const radius = 20;
-                agent.mesh.position.x = Math.cos(angle) * radius;
-                agent.mesh.position.y = Math.sin(angle * 0.5) * 10;
-                agent.mesh.position.z = Math.sin(angle) * radius;
-            });
-            
-            // Rotate particles
-            particles.rotation.y += 0.0002;
-            particles.rotation.x += 0.0001;
-            
-            controls.update();
-            renderer.render(scene, camera);
-        }
-        
-        animate();
-        
-        // Handle Resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-        
-        // ========================================
-        // COMMAND SYSTEM
-        // ========================================
-        
-        function handleCommand(event) {
-            if (event.key === 'Enter') {
-                executeCommand();
+        // ========== PNL CHART (CANVAS) ==========
+        const pnlCanvas = document.getElementById('pnl-chart');
+        const pnlCtx = pnlCanvas.getContext('2d');
+        function drawChart() {
+            const rect = pnlCanvas.parentElement.getBoundingClientRect();
+            pnlCanvas.width = rect.width;
+            pnlCanvas.height = rect.height - 40;
+            const w = pnlCanvas.width;
+            const h = pnlCanvas.height;
+            const data = [0, 2, 1, 3, 2, 5, 4, 6, 5, 8, 7, 9, 8, 11, 10, 12, 11, 13, 12];
+            pnlCtx.clearRect(0, 0, w, h);
+            // Grid
+            pnlCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+            pnlCtx.lineWidth = 1;
+            for(let i=0; i<5; i++) {
+                const y = (h/5)*i;
+                pnlCtx.beginPath(); pnlCtx.moveTo(0, y); pnlCtx.lineTo(w, y); pnlCtx.stroke();
             }
+            // Line
+            pnlCtx.beginPath();
+            pnlCtx.strokeStyle = '#10b981';
+            pnlCtx.lineWidth = 3;
+            data.forEach((v, i) => {
+                const x = (w/(data.length-1))*i;
+                const y = h - (v/14)*h;
+                if(i===0) pnlCtx.moveTo(x, y);
+                else pnlCtx.lineTo(x, y);
+            });
+            pnlCtx.stroke();
+            // Fill
+            pnlCtx.lineTo(w, h);
+            pnlCtx.lineTo(0, h);
+            pnlCtx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+            pnlCtx.fill();
         }
+        drawChart();
+        window.addEventListener('resize', drawChart);
         
-        function executeCommand() {
-            const input = document.getElementById('command-input');
-            const command = input.value.trim();
-            
-            if (!command) return;
-            
-            // Process command
-            const responses = {
-                'projetos': '📊 Projetos ativos: PROJ-004 (QA), PROJ-003 (Concluído), PROJ-002 (Concluído), PROJ-001 (Concluído)',
-                'status': '✅ Sistema operacional: 26/26 agentes online. Uptime: 99.9%',
-                'trading': '💰 BTC: $104,230 | Positions: 3 | PnL: +12.5%',
-                'ajuda': 'Comandos disponíveis: projetos, status, trading, finanças, agentes, criar projeto',
-                'agentes': '🤖 26 agentes ativos. brain (estratégia), scheduler (planejamento), trader (execução), quality_auditor (QA)'
-            };
-            
-            const response = responses[command.toLowerCase()] || `🔄 Processando: "${command}"...`;
-            addNotification(response);
-            
-            // Visual feedback
+        // ========== BACKGROUND (PARTICLES) ==========
+        const bg = document.getElementById('bg');
+        const ctx = bg.getContext('2d');
+        bg.width = window.innerWidth;
+        bg.height = window.innerHeight;
+        window.addEventListener('resize', () => { bg.width = window.innerWidth; bg.height = window.innerHeight; });
+        
+        const particles = [];
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: Math.random()*bg.width,
+                y: Math.random()*bg.height,
+                size: Math.random()*2+0.5,
+                speedX: (Math.random()-0.5)*0.3,
+                speedY: (Math.random()-0.5)*0.3,
+                opacity: Math.random()*0.5+0.1
+            });
+        }
+        function animateBg() {
+            ctx.fillStyle = '#020205';
+            ctx.fillRect(0, 0, bg.width, bg.height);
+            particles.forEach(p => {
+                p.x += p.speedX;
+                p.y += p.speedY;
+                if(p.x<0) p.x=bg.width;
+                if(p.x>bg.width) p.x=0;
+                if(p.y<0) p.y=bg.height;
+                if(p.y>bg.height) p.y=0;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(0,212,255,${p.opacity})`;
+                ctx.fill();
+            });
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+        
+        // ========== CLOCK ==========
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('pt-BR');
+        }, 1000);
+        
+        // ========== CONSOLE SIMULATION ==========
+        setInterval(() => {
+            const actions = [
+                { type: 'info', msg: 'brain: Atualizando prioridades do dia' },
+                { type: 'success', msg: 'scheduler: Tarefa PROJ-005 concluída' },
+                { type: 'info', msg: 'trend_analyst: Verificando tendências' },
+                { type: 'success', msg: 'crypto_analyst: Novo sinal detectado' },
+                { type: 'warning', msg: 'market_monitor: Volume anormal em BTC' }
+            ];
+            const action = actions[Math.floor(Math.random()*actions.length)];
+            const time = new Date().toLocaleTimeString('pt-BR');
+            addConsoleLine({ time, ...action });
+            if(document.getElementById('console').children.length > 20) {
+                document.getElementById('console').removeChild(document.getElementById('console').firstChild);
+            }
+        }, 5000);
+        
+        // ========== CHAT ==========
+        function addChat(msg, isUser) {
+            const m = document.getElementById('chat-messages');
+            m.innerHTML += `
+                <div class="chat-msg ${isUser?'user':'omega'}">
+                    <div class="msg-bubble">${msg}</div>
+                </div>
+            `;
+            m.scrollTop = m.scrollHeight;
+        }
+        function sendChat() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+            addChat(text, true);
+            const key = text.toLowerCase().replace('fala com ', '').replace('fala ', '');
+            const response = responses[key] || `🔄 Processando: "${text}"...<br>Tente: projetos, trading, finanças, status, ajuda.`;
+            setTimeout(() => addChat(response, false), 400);
             input.value = '';
         }
-        
-        function addNotification(message) {
-            const container = document.getElementById('notifications');
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.innerHTML = `<p style="font-size: 0.9rem;">${message}</p>`;
-            container.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
-            }, 4000);
+        function cmd(c) {
+            document.getElementById('chat-input').value = c;
+            sendChat();
         }
         
-        function selectAgent(agent) {
-            document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('active'));
-            event.target.closest('.agent-card').classList.add('active');
-            addNotification(`🤖 ${agent.toUpperCase()} selecionado.`);
-        }
-        
-        function showSection(section) {
-            const commands = {
-                'projects': 'Mostrando projetos...',
-                'trading': 'Abrindo painel de trading...',
-                'finance': 'Exibindo finanças...',
-                'agents': 'Lista de agentes carregada.'
-            };
-            addNotification(commands[section]);
-        }
-        
-        // Initialize
-        addNotification('🎉 FactoryOS Nexus iniciado com sucesso!');
-        addNotification('💡 Dica: Digite "ajuda" para ver comandos disponíveis.');
+        // ========== WELCOME ==========
+        setTimeout(() => {
+            addChat('🧠 <strong>Bem-vindo ao FactoryOS Nexus!</strong><br>Digite um comando ou clique nos botões.', false);
+        }, 500);
     </script>
 </body>
 </html>
